@@ -5,18 +5,14 @@ var EOL = require('os').EOL;
 var through = require('through2');
 var gutil = require('gulp-util');
 
-module.exports = function(options) {
+module.exports = function (options) {
   options = options || {};
 
   var startReg = /<!--\s*rev\-hash\s*-->/gim;
   var endReg = /<!--\s*end\s*-->/gim;
-  var jsAndCssReg = /<\s*script\s+.*?src\s*=\s*"([^"]+.js).*".*?><\s*\/\s*script\s*>|<\s*link\s+.*?href\s*=\s*"([^"]+.css).*".*?>/gi;
+  var jsAndCssReg = /<\s*script\s+.*?src\s*=\s*"([^"]+?)\.js.*".*?><\s*\/\s*script\s*>|<\s*link\s+.*?href\s*=\s*"([^"]+?)\.css.*".*?>/gi;
   var regSpecialsReg = /([.?*+^$[\]\\(){}|-])/g;
   var basePath, mainPath, mainName, alternatePath;
-
-  function getBlockType(content) {
-    return jsReg.test(content) ? 'js' : 'css';
-  }
 
   function getTags(content) {
     var tags = [];
@@ -24,13 +20,19 @@ module.exports = function(options) {
     content
       .replace(/<!--(?:(?:.|\r|\n)*?)-->/gim, '')
       .replace(jsAndCssReg, function (a, b, c) {
+        var path = b || c,
+          pathParts = path.split('-v'),
+          extension = b ? '.js' : '.css';
+
+
         tags.push({
           html: a,
-          path: b || c,
-          pathReg: new RegExp(escapeRegSpecials(b || c) + '.*?"', 'g')
+          path: pathParts[0],
+          extension: b ? '.js' : '.css',
+          pathReg: new RegExp(escapeRegSpecials(path + extension), 'g')
         });
       });
-
+    console.log(tags);
     return tags;
   }
 
@@ -38,16 +40,25 @@ module.exports = function(options) {
     return (str + '').replace(regSpecialsReg, "\\$1");
   }
 
-  return through.obj(function(file, enc, callback) {
+  function endsWith(subjectString, searchString, position) {
+    if (typeof position !== 'number' || !isFinite(position) || Math.floor(position) !== position || position > subjectString.length) {
+      position = subjectString.length;
+    }
+    position -= searchString.length;
+
+    var lastIndex = subjectString.lastIndexOf(searchString, position);
+
+    return lastIndex !== -1 && lastIndex === position;
+  }
+
+  return through.obj(function (file, enc, callback) {
     if (file.isNull()) {
       this.push(file); // Do nothing if no contents
       callback();
-    }
-    else if (file.isStream()) {
+    } else if (file.isStream()) {
       this.emit('error', new gutil.PluginError('gulp-usemin', 'Streams are not supported!'));
       callback();
-    }
-    else {
+    } else {
       basePath = file.base;
       mainPath = path.dirname(file.path);
       mainName = path.basename(file.path);
@@ -69,13 +80,16 @@ module.exports = function(options) {
               .createHash('md5')
               .update(
                 fs.readFileSync(
-                  path.join((options.assetsDir?options.assetsDir:''), tag.path), {encoding: 'utf8'}))
+                  path.join((options.assetsDir ? options.assetsDir : ''), tag.path + tag.extension), {
+                    encoding: 'utf8'
+                  }))
               .digest("hex");
-            html.push(tag.html.replace(tag.pathReg, tag.path + '?v=' + hash + '"') + '\r\n');
+            html.push(tag.html.replace(tag.pathReg, tag.path + '-v' + hash + tag.extension) + '\r\n');
           }
           html.push('<!-- end -->');
+        } else {
+          html.push(sections[i]);
         }
-        else { html.push(sections[i]); }
       }
       file.contents = new Buffer(html.join(''));
       this.push(file);

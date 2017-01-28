@@ -6,3 +6,5 @@ gulp.task('test', function () {
     .pipe(rev({assetsDir: 'test'}))
     .pipe(gulp.dest('test'));
 });
+
+gulp.task('default',['test']);

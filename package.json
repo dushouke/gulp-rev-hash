@@ -9,11 +9,11 @@
   },
   "devDependencies": {
     "event-stream": "~3.1.0",
-    "gulp": "~3.5.5"
+    "gulp": "^3.5.5"
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/outluch/gulp-rev-hash.git"
+    "url": "git://github.com/dushouke/gulp-rev-hash.git"
   },
   "keywords": [
     "gulpplugin",
@@ -25,7 +25,7 @@
     "md5",
     "hash"
   ],
-  "author": "Konstantin <outluch@gmail.com>",
+  "author": "JeffDu <dushouke@qq.com>",
   "license": "MIT",
   "engines": {
     "node": ">=0.8"
