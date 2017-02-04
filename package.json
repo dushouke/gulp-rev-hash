@@ -1,33 +1,33 @@
 {
-  "name": "gulp-rev-hash",
-  "version": "0.0.2",
-  "description": "Appends a file's hash to a file URL to cache assets in any file (html, templates)",
-  "main": "index.js",
-  "dependencies": {
-    "gulp-util": "~2.2.14",
-    "through2": "~0.4.1"
-  },
-  "devDependencies": {
-    "event-stream": "~3.1.0",
-    "gulp": "^3.5.5"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/dushouke/gulp-rev-hash.git"
-  },
-  "keywords": [
-    "gulpplugin",
-    "js",
-    "javascript",
-    "asset",
-    "caching",
-    "rev",
-    "md5",
-    "hash"
-  ],
-  "author": "JeffDu <dushouke@qq.com>",
-  "license": "MIT",
-  "engines": {
-    "node": ">=0.8"
-  }
+    "name": "gulp-rev-hash-inline",
+    "version": "0.0.1",
+    "description": "Appends a file's hash to a file URL to cache assets in any file (html, templates)",
+    "main": "index.js",
+    "dependencies": {
+        "gulp-util": "~2.2.14",
+        "through2": "~0.4.1"
+    },
+    "devDependencies": {
+        "event-stream": "~3.1.0",
+        "gulp": "^3.5.5"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/dushouke/gulp-rev-hash-inline.git"
+    },
+    "keywords": [
+        "gulpplugin",
+        "js",
+        "javascript",
+        "asset",
+        "caching",
+        "rev",
+        "md5",
+        "hash"
+    ],
+    "author": "JeffDu <dushouke@qq.com>",
+    "license": "MIT",
+    "engines": {
+        "node": ">=0.8"
+    }
 }
