@@ -19,6 +19,9 @@ module.exports = function(options) {
     const tagsReg = [
         /<\s*script\s+.*?src\s*=\s*"([^"]+?)\.(js){1}.*".*?><\s*\/\s*script\s*>/gi,  /* <script> for .js files */
         /<\s*link\s+.*?href\s*=\s*"([^"]+?)\.(css){1}.*".*?>/gi,  /* <link> for .css files */
+        /<\s*img\s+.*?src\s*=\s*"([^"]+?)\.(png|jpg|jpeg|gif|bmp|webp|svg){1}.*".*?>/gi, /* <img> for most common files */
+        /<\s*link\s+.*?href\s*=\s*"([^"]+?)\.(json){1}.*".*?>/gi, /* <link> for .json files (manifest.json) */
+        /<\s*link\s+.*?href\s*=\s*"([^"]+?)\.(png|ico){1}.*".*?>/gi /* <link> for .png or .ico files (link rel="icon") */
     ];
 
     var basePath, mainPath, mainName;
