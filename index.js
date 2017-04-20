@@ -11,35 +11,35 @@ module.exports = function(options) {
 
     var startReg = /<!--\s*rev\-hash\s*-->/gim;
     var endReg = /<!--\s*end\s*-->/gim;
-    var jsAndCssReg = /<\s*script\s+.*?src\s*=\s*"([^"]+?)\.js.*".*?><\s*\/\s*script\s*>|<\s*link\s+.*?href\s*=\s*"([^"]+?)\.css.*".*?>/gi;
     var regSpecialsReg = /([.?*+^$[\]\\(){}|-])/g;
+    var htmlCommentReg = /<!--(?:(?:.|\r|\n)*?)-->/gim;
+
+    // The regular expressions for the tags to be extracted.
+    // The first group of each expression should be the file path, the second should be the file extension.
+    const tagsReg = [
+        /<\s*script\s+.*?src\s*=\s*"([^"]+?)\.(js){1}.*".*?><\s*\/\s*script\s*>/gi,  /* <script> for .js files */
+        /<\s*link\s+.*?href\s*=\s*"([^"]+?)\.(css){1}.*".*?>/gi,  /* <link> for .css files */
+    ];
+
     var basePath, mainPath, mainName;
 
     function getTags(content) {
         var tags = [];
 
-        const replF = function(a, b, c) {
-                console.log("a: " + a + "  b: " + b + "  c: " + c);
+        const extractTag = function(match, filepath, extension) {
+            let p = filepath.split('-v')[0];
 
-                var path = b || c,
-                    pathParts = path.split('-v'),
-                    extension = b ? '.js' : '.css';
+            tags.push({
+                html: match,
+                path: p,
+                extension: extension,
+                pathReg: new RegExp(escapeRegSpecials(p + "." + extension), 'g')
+            });
+        };
 
+        content = content.replace(htmlCommentReg, '');
+        tagsReg.forEach(reg => {content.replace(reg, extractTag);});
 
-                tags.push({
-                    html: a,
-                    path: pathParts[0],
-                    extension: b ? '.js' : '.css',
-                    pathReg: new RegExp(escapeRegSpecials(path + extension), 'g')
-                });
-            };
-
-        content
-            .replace(/<!--(?:(?:.|\r|\n)*?)-->/gim, '')
-            .replace(jsAndCssReg, replF);
-
-
-        //console.log(tags);
         return tags;
     }
 
@@ -76,11 +76,11 @@ module.exports = function(options) {
                             .createHash('md5')
                             .update(
                                 fs.readFileSync(
-                                    path.join((options.assetsDir ? options.assetsDir : ''), tag.path + tag.extension), {
+                                    path.join((options.assetsDir ? options.assetsDir : ''), tag.path + "." + tag.extension), {
                                         encoding: 'utf8'
                                     }))
                             .digest("hex");
-                        html.push(tag.html.replace(tag.pathReg, tag.path + '-v' + hash + tag.extension) + '\r\n');
+                        html.push(tag.html.replace(tag.pathReg, tag.path + '-v' + hash + "." + tag.extension) + '\r\n');
                     }
                     html.push('<!-- end -->');
                 } else {
