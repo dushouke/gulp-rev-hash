@@ -1,6 +1,7 @@
+"use strict";
+
 var path = require('path');
 var fs = require('fs');
-var EOL = require('os').EOL;
 
 var through = require('through2');
 var gutil = require('gulp-util');
@@ -10,45 +11,43 @@ module.exports = function(options) {
 
     var startReg = /<!--\s*rev\-hash\s*-->/gim;
     var endReg = /<!--\s*end\s*-->/gim;
-    var jsAndCssReg = /<\s*script\s+.*?src\s*=\s*"([^"]+?)\.js.*".*?><\s*\/\s*script\s*>|<\s*link\s+.*?href\s*=\s*"([^"]+?)\.css.*".*?>/gi;
     var regSpecialsReg = /([.?*+^$[\]\\(){}|-])/g;
-    var basePath, mainPath, mainName, alternatePath;
+    var htmlCommentReg = /<!--(?:(?:.|\r|\n)*?)-->/gim;
+
+    // The regular expressions for the tags to be extracted.
+    // The first group of each expression should be the file path, the second should be the file extension.
+    const tagsReg = [
+        /<\s*script\s+.*?src\s*=\s*"([^"]+?)\.(js){1}.*".*?><\s*\/\s*script\s*>/gi,  /* <script> for .js files */
+        /<\s*link\s+.*?href\s*=\s*"([^"]+?)\.(css){1}.*".*?>/gi,  /* <link> for .css files */
+        /<\s*img\s+.*?src\s*=\s*"([^"]+?)\.(png|jpg|jpeg|gif|bmp|webp|svg){1}.*".*?>/gi, /* <img> for most common files */
+        /<\s*link\s+.*?href\s*=\s*"([^"]+?)\.(json){1}.*".*?>/gi, /* <link> for .json files (manifest.json) */
+        /<\s*link\s+.*?href\s*=\s*"([^"]+?)\.(png|ico){1}.*".*?>/gi /* <link> for .png or .ico files (link rel="icon") */
+    ];
+
+    var basePath, mainPath, mainName;
 
     function getTags(content) {
         var tags = [];
 
-        content
-            .replace(/<!--(?:(?:.|\r|\n)*?)-->/gim, '')
-            .replace(jsAndCssReg, function(a, b, c) {
-                var path = b || c,
-                    pathParts = path.split('-v'),
-                    extension = b ? '.js' : '.css';
+        const extractTag = function(match, filepath, extension) {
+            let p = filepath.split('-v')[0];
 
-
-                tags.push({
-                    html: a,
-                    path: pathParts[0],
-                    extension: b ? '.js' : '.css',
-                    pathReg: new RegExp(escapeRegSpecials(path + extension), 'g')
-                });
+            tags.push({
+                html: match,
+                path: p,
+                extension: extension,
+                pathReg: new RegExp(escapeRegSpecials(filepath + "." + extension), 'g')
             });
-        //console.log(tags);
+        };
+
+        content = content.replace(htmlCommentReg, '');
+        tagsReg.forEach(reg => {content.replace(reg, extractTag);});
+
         return tags;
     }
 
     function escapeRegSpecials(str) {
         return (str + '').replace(regSpecialsReg, "\\$1");
-    }
-
-    function endsWith(subjectString, searchString, position) {
-        if (typeof position !== 'number' || !isFinite(position) || Math.floor(position) !== position || position > subjectString.length) {
-            position = subjectString.length;
-        }
-        position -= searchString.length;
-
-        var lastIndex = subjectString.lastIndexOf(searchString, position);
-
-        return lastIndex !== -1 && lastIndex === position;
     }
 
     return through.obj(function(file, enc, callback) {
@@ -72,7 +71,7 @@ module.exports = function(options) {
                     var section = sections[i].split(startReg);
                     var tags = getTags(section[1]);
                     html.push(section[0]);
-                    html.push('<!-- rev-hash -->\r\n')
+                    html.push('<!-- rev-hash -->\r\n');
 
                     for (var j = 0; j < tags.length; j++) {
                         tag = tags[j];
@@ -80,11 +79,11 @@ module.exports = function(options) {
                             .createHash('md5')
                             .update(
                                 fs.readFileSync(
-                                    path.join((options.assetsDir ? options.assetsDir : ''), tag.path + tag.extension), {
+                                    path.join((options.assetsDir ? options.assetsDir : ''), tag.path + "." + tag.extension), {
                                         encoding: 'utf8'
                                     }))
                             .digest("hex");
-                        html.push(tag.html.replace(tag.pathReg, tag.path + '-v' + hash + tag.extension) + '\r\n');
+                        html.push(tag.html.replace(tag.pathReg, tag.path + '-v' + hash + "." + tag.extension) + '\r\n');
                     }
                     html.push('<!-- end -->');
                 } else {
