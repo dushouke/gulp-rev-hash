@@ -36,7 +36,7 @@ module.exports = function(options) {
                 html: match,
                 path: p,
                 extension: extension,
-                pathReg: new RegExp(escapeRegSpecials(p + "." + extension), 'g')
+                pathReg: new RegExp(escapeRegSpecials(filepath + "." + extension), 'g')
             });
         };
 
